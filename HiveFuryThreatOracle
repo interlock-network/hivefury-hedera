@@ -1,0 +1,260 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+/**
+ * @title HiveFuryThreatOracle
+ * @dev Web3 threat detection oracle with HFURY token rewards
+ */
+contract HiveFuryThreatOracle {
+    address constant HTS_PRECOMPILE = 0x0000000000000000000000000000000000000167;
+
+    address public hfuryToken;
+    address public bondingCurve;
+    address public owner;
+
+    uint256 public baseReward = 100 * 10**8; // 100 HFURY
+    uint256 public highScoreThreshold = 80;
+    uint256 public mediumScoreThreshold = 50;
+    uint256 public threatCount;
+    uint256 public validatedCount;
+    uint256 public totalRewardsIssued;
+    uint256 public totalRewardsClaimed;
+
+    struct Threat {
+        string url;
+        string threatType;
+        uint8 aiScore;
+        address reporter;
+        uint256 timestamp;
+        bool validated;
+        uint256 rewardAmount;
+        bytes32 hcsMessageId;
+    }
+
+    struct ReporterStats {
+        uint256 totalReports;
+        uint256 validatedReports;
+        uint256 totalRewards;
+        uint256 claimedRewards;
+        uint256 reputation;
+        uint256 lastReportTime;
+        uint256 lastClaimTime;
+    }
+
+    mapping(uint256 => Threat) public threats;
+    mapping(string => uint256) public urlToThreatId;
+    mapping(address => uint256[]) public reporterThreats;
+    mapping(address => ReporterStats) public reporterStats;
+
+    event ThreatReported(uint256 indexed threatId, string url, uint8 aiScore, address reporter);
+    event ThreatValidated(uint256 indexed threatId, bool autoValidated, uint8 aiScore);
+    event RewardCalculated(address indexed reporter, uint256 amount, uint256 threatId);
+    event RewardsClaimed(address indexed reporter, uint256 amount);
+    event TokensConfigured(address hfuryToken, address bondingCurve);
+    event HTSReady(address indexed reporter, uint256 pendingRewards);
+    event ReputationUpdated(address indexed reporter, uint256 newReputation);
+    event HCSSubmission(uint256 indexed threatId, bytes32 messageId, uint256 timestamp);
+    event TokenAssociated(address contractAddress, address token);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function configureTokens(address _hfuryToken, address _bondingCurve) external onlyOwner {
+        require(_hfuryToken != address(0), "Invalid token address");
+        hfuryToken = _hfuryToken;
+        bondingCurve = _bondingCurve;
+        emit TokensConfigured(_hfuryToken, _bondingCurve);
+    }
+
+    function associateWithToken(address token) external onlyOwner {
+        (bool success, ) = HTS_PRECOMPILE.call(
+            abi.encodeWithSignature(
+                "associateToken(address,address)",
+                address(this),
+                token
+            )
+        );
+        require(success, "Association failed");
+        emit TokenAssociated(address(this), token);
+    }
+
+    function reportThreat(
+        string calldata _url,
+        string calldata _threatType,
+        uint8 _aiScore
+    ) external returns (uint256) {
+        require(bytes(_url).length > 0, "URL required");
+        require(_aiScore <= 100, "Invalid AI score");
+
+        uint256 existingId = urlToThreatId[_url];
+        if (existingId != 0) {
+            if (_aiScore > threats[existingId].aiScore) {
+                threats[existingId].aiScore = _aiScore;
+                _processAIValidation(existingId, _aiScore);
+            }
+            return existingId;
+        }
+
+        threatCount++;
+        uint256 threatId = threatCount;
+
+        threats[threatId] = Threat({
+            url: _url,
+            threatType: _threatType,
+            aiScore: _aiScore,
+            reporter: msg.sender,
+            timestamp: block.timestamp,
+            validated: false,
+            rewardAmount: 0,
+            hcsMessageId: 0
+        });
+
+        urlToThreatId[_url] = threatId;
+        reporterThreats[msg.sender].push(threatId);
+
+        reporterStats[msg.sender].totalReports++;
+        reporterStats[msg.sender].lastReportTime = block.timestamp;
+
+        emit ThreatReported(threatId, _url, _aiScore, msg.sender);
+
+        _processAIValidation(threatId, _aiScore);
+        _submitToHCS(threatId);
+
+        return threatId;
+    }
+
+    function _processAIValidation(uint256 _threatId, uint8 _aiScore) internal {
+        if (_aiScore >= highScoreThreshold) {
+            threats[_threatId].validated = true;
+            validatedCount++;
+
+            uint256 reward = _calculateReward(_aiScore);
+            threats[_threatId].rewardAmount = reward;
+
+            address reporter = threats[_threatId].reporter;
+            reporterStats[reporter].validatedReports++;
+            reporterStats[reporter].totalRewards += reward;
+            reporterStats[reporter].reputation += 10;
+
+            totalRewardsIssued += reward;
+
+            emit ThreatValidated(_threatId, true, _aiScore);
+            emit RewardCalculated(reporter, reward, _threatId);
+            emit ReputationUpdated(reporter, reporterStats[reporter].reputation);
+            emit HTSReady(reporter, reporterStats[reporter].totalRewards - reporterStats[reporter].claimedRewards);
+
+        } else if (_aiScore >= mediumScoreThreshold) {
+            reporterStats[threats[_threatId].reporter].reputation += 3;
+        }
+    }
+
+    function _calculateReward(uint8 _aiScore) internal view returns (uint256) {
+        if (_aiScore >= 95) return baseReward * 3;
+        if (_aiScore >= 90) return baseReward * 2;
+        if (_aiScore >= highScoreThreshold) return baseReward;
+        return 0;
+    }
+
+    function _submitToHCS(uint256 _threatId) internal {
+        Threat storage threat = threats[_threatId];
+
+        bytes memory message = abi.encode(
+            "HIVEFURY_THREAT",
+            _threatId,
+            threat.url,
+            threat.aiScore,
+            threat.reporter,
+            block.timestamp
+        );
+
+        bytes32 messageId = keccak256(abi.encodePacked(
+            block.timestamp,
+            _threatId,
+            message
+        ));
+
+        threat.hcsMessageId = messageId;
+        emit HCSSubmission(_threatId, messageId, block.timestamp);
+    }
+
+    function claimRewards() external returns (uint256) {
+        ReporterStats storage stats = reporterStats[msg.sender];
+        uint256 pendingRewards = stats.totalRewards - stats.claimedRewards;
+
+        require(pendingRewards > 0, "No rewards to claim");
+        require(hfuryToken != address(0), "Token not configured");
+
+        stats.claimedRewards = stats.totalRewards;
+        stats.lastClaimTime = block.timestamp;
+        totalRewardsClaimed += pendingRewards;
+
+        (bool success, ) = HTS_PRECOMPILE.call(
+            abi.encodeWithSignature(
+                "transferToken(address,address,address,int64)",
+                hfuryToken,
+                address(this),
+                msg.sender,
+                int64(uint64(pendingRewards))
+            )
+        );
+        require(success, "Token transfer failed");
+
+        emit RewardsClaimed(msg.sender, pendingRewards);
+        return pendingRewards;
+    }
+
+    function validateThreat(uint256 _threatId) external onlyOwner {
+        require(_threatId > 0 && _threatId <= threatCount, "Invalid threat ID");
+        require(!threats[_threatId].validated, "Already validated");
+
+        threats[_threatId].validated = true;
+        validatedCount++;
+
+        uint256 reward = baseReward;
+        threats[_threatId].rewardAmount = reward;
+
+        address reporter = threats[_threatId].reporter;
+        reporterStats[reporter].validatedReports++;
+        reporterStats[reporter].totalRewards += reward;
+        reporterStats[reporter].reputation += 5;
+
+        totalRewardsIssued += reward;
+
+        emit ThreatValidated(_threatId, false, threats[_threatId].aiScore);
+        emit RewardCalculated(reporter, reward, _threatId);
+    }
+
+    function depositRewardTokens(uint256 amount) external onlyOwner {
+        require(hfuryToken != address(0), "Token not configured");
+
+        (bool success, ) = HTS_PRECOMPILE.call(
+            abi.encodeWithSignature(
+                "transferToken(address,address,address,int64)",
+                hfuryToken,
+                msg.sender,
+                address(this),
+                int64(uint64(amount))
+            )
+        );
+        require(success, "Token deposit failed");
+    }
+
+    function emergencyWithdraw(address token, uint256 amount) external onlyOwner {
+        (bool success, ) = HTS_PRECOMPILE.call(
+            abi.encodeWithSignature(
+                "transferToken(address,address,address,int64)",
+                token,
+                address(this),
+                owner,
+                int64(uint64(amount))
+            )
+        );
+        require(success, "Emergency withdraw failed");
+    }
+}

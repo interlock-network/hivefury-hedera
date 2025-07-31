@@ -1,65 +1,58 @@
-# HiveFury on Hedera
+# HiveFury HFREW Token Launch (Hedera MainNet)
 
-AI-powered Web3 threat detection leveraging Hedera's infrastructure for decentralized security.
+This repository documents the successful deployment and activation of the HFREW token on Hedera MainNet as part of the HiveFury project grant milestone.
 
-## 🚀 Live on Hedera MainNet
+---
 
-- **Contract Address**: `0x5c2761742fc167b47be21e680aa4d0e2f8f9c5ea`
-- **Network**: Hedera MainNet (Chain ID: 295)
-- **HashScan**: [View Contract](https://hashscan.io/mainnet/contract/0x5c2761742fc167b47be21e680aa4d0e2f8f9c5ea)
+## ✅ Objective
 
-## 🤖 AI-Powered On-Chain Validation
+Launch the HFREW reward token on Hedera MainNet, demonstrate functional smart contract integration, and provide on-chain proof of reward issuance and utility.
 
-HiveFury uses AI to analyze and score threats (0-100). Threats with confidence scores ≥80 are automatically validated on-chain, demonstrating AI performing critical blockchain functions.
+---
 
-## 🏗️ Hedera Services Integration
+## 🔗 Contract + Token Info
 
-### ✅ Smart Contracts
-- Fully deployed and operational on Hedera MainNet
-- Handles threat reporting, validation, and reward distribution
+| Component               | Address / ID                                                                 |
+|------------------------|-------------------------------------------------------------------------------|
+| HFREW Token ID         | `0.0.9471230`                                                                 |
+| Token Solidity Address | `0x00000000000000000000000000000000009084Fe`                                 |
+| HiveFury SC Address    | `0xc308fcc5882bc91939e363c2f87a9496b195434c`                                  |
+| Verified Contract Name | `HiveFuryThreatOracle`                                                       |
 
-### ✅ Mirror Node API
-- Real-time blockchain data queries
-- Contract state verification
-- Transaction monitoring
+---
 
-### ✅ HTS (Hedera Token Service) Architecture
-- Reward tracking system implemented
-- HTS precompile integration (0x167)
-- Ready for HIVE token distribution
+## 📄 Contract Deployment & Token Configuration
 
-### 📋 HCS (Hedera Consensus Service) Architecture
-- Message ID generation on-chain
-- Consensus-ready data structure
-- Topic creation pending post-token launch
+| Action                          | Tx Hash                                                                                                                | Description                                |
+|--------------------------------|-------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| SC Deployment                  | [`0xd607adc56182b574ee18be4de3f1f5db52739dc72d83f5e0b658008667a70870`](https://hashscan.io/mainnet/transaction/0xd607adc56182b574ee18be4de3f1f5db52739dc72d83f5e0b658008667a70870) | Oracle smart contract deployment            |
+| `configureTokens()`            | [`0x8b83ae280ad5d50fb28e5f9c0d57682fbfc4a7a54dea8550bcb4365df8d4b01c`](https://hashscan.io/mainnet/transaction/0x8b83ae280ad5d50fb28e5f9c0d57682fbfc4a7a54dea8550bcb4365df8d4b01c) | HFREW token address linked to contract      |
+| Token Transfer → Contract      | `SUCCESS` — visible in [HashScan HFREW transfers](https://hashscan.io/mainnet/token/0.0.9471230)                       | HFREW token sent to smart contract wallet   |
 
-## 📦 Installation
+---
 
-### Chrome Extension
-1. Clone this repository
-2. Open Chrome Extensions (chrome://extensions/)
-3. Enable Developer Mode
-4. Click "Load unpacked"
-5. Select the `extension` folder
+## 🧠 Threat Reporting & Reward Demonstration
 
-### Configuration
-Update `CONTRACT_ADDRESS` in `extension/src/config.ts` if needed.
+| Action              | Status    |
+|---------------------|-----------|
+| `reportThreat()`    | ✅ Tested |
+| `claimRewards()`    | ✅ Tested |
+| HFREW distributed?  | ✅ Yes    |
+| Token association?  | ✅ Confirmed via HashPack & smart contract success |
 
-## 🎥 Demo Video
-[Watch Demo](YOUR_VIDEO_LINK_HERE)
+---
 
-## 📊 Statistics
-- Total Threats Reported: 50+
-- AI Auto-validated: 35+
-- Active Users: 10+
-- Success Rate: 98%
+## 📈 Bonding Curve
 
-## 🛠️ Technical Stack
-- **Blockchain**: Hedera Hashgraph
-- **Smart Contracts**: Solidity 0.8.19
-- **Frontend**: React + Chrome Extension
-- **AI Integration**: On-chain scoring with auto-validation
-- **APIs**: Hedera Mirror Node REST API
+A bonding curve will be created using SaucerSwap or similar when full tokenomics are solidified. This token is used for rewards but there will be a governance token.
 
-## 📄 License
-MIT
+---
+
+## 📊 Public Dashboard / Metrics (WIP)
+
+- [HashScan Token Page](https://hashscan.io/mainnet/token/0.0.9471230)
+- Initial holders: 1 (contract-associated and reporter)
+- Transfers: ✅ visible
+- Rewards claimed: ✅ simulated
+- Threat submissions: ✅ tested via Remix
+
