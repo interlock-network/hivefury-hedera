@@ -1,58 +1,55 @@
-# HiveFury HFREW Token Launch (Hedera MainNet)
-
-This repository documents the successful deployment and activation of the HFREW token on Hedera MainNet as part of the HiveFury project grant milestone.
-
----
+# HFREW Token Deployment on Hedera MainNet
 
 ## ✅ Objective
 
-Launch the HFREW reward token on Hedera MainNet, demonstrate functional smart contract integration, and provide on-chain proof of reward issuance and utility.
+To deploy the HFREW token on Hedera MainNet with a functional bonding curve, initial on-chain activity, and public visibility — fulfilling the milestone requirements.
 
 ---
 
-## 🔗 Contract + Token Info
+## 📌 Token Details
 
-| Component               | Address / ID                                                                 |
-|------------------------|-------------------------------------------------------------------------------|
-| HFREW Token ID         | `0.0.9471230`                                                                 |
-| Token Solidity Address | `0x00000000000000000000000000000000009084Fe`                                 |
-| HiveFury SC Address    | `0xc308fcc5882bc91939e363c2f87a9496b195434c`                                  |
-| Verified Contract Name | `HiveFuryThreatOracle`                                                       |
-
----
-
-## 📄 Contract Deployment & Token Configuration
-
-| Action                          | Tx Hash                                                                                                                | Description                                |
-|--------------------------------|-------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| SC Deployment                  | [`0xd607adc56182b574ee18be4de3f1f5db52739dc72d83f5e0b658008667a70870`](https://hashscan.io/mainnet/transaction/0xd607adc56182b574ee18be4de3f1f5db52739dc72d83f5e0b658008667a70870) | Oracle smart contract deployment            |
-| `configureTokens()`            | [`0x8b83ae280ad5d50fb28e5f9c0d57682fbfc4a7a54dea8550bcb4365df8d4b01c`](https://hashscan.io/mainnet/transaction/0x8b83ae280ad5d50fb28e5f9c0d57682fbfc4a7a54dea8550bcb4365df8d4b01c) | HFREW token address linked to contract      |
-| Token Transfer → Contract      | `SUCCESS` — visible in [HashScan HFREW transfers](https://hashscan.io/mainnet/token/0.0.9471230)                       | HFREW token sent to smart contract wallet   |
+- **Token Name:** HFREW
+- **Token Symbol:** HFREW
+- **Token Type:** Fungible Token (HTS)
+- **Token ID (Hedera Format):** `0.0.9471230`
+- **Token Address (Solidity format):** `0x00000000000000000000000000000000009084Fe`
 
 ---
 
-## 🧠 Threat Reporting & Reward Demonstration
+## ⚙️ Smart Contracts
 
-| Action              | Status    |
-|---------------------|-----------|
-| `reportThreat()`    | ✅ Tested |
-| `claimRewards()`    | ✅ Tested |
-| HFREW distributed?  | ✅ Yes    |
-| Token association?  | ✅ Confirmed via HashPack & smart contract success |
+### HiveFury Threat Oracle
+
+- **Purpose:** Configures and interacts with the HFREW token and Threat Oracle mechanisms.
+- **Deployed Address:** `0xc308fcc5882bc91939e363c2f87a9496b195434c`
+- **Deployment Tx:** [0xd607adc56182b574ee18be4de3f1f5db52739dc72d83f5e0b658008667a70870](https://hashscan.io/mainnet/transaction/0xd607adc56182b574ee18be4de3f1f5db52739dc72d83f5e0b658008667a70870)
+
+### HFREW Bonding Curve
+
+- **Purpose:** Manages price dynamics and token liquidity using a custom bonding curve.
+- **Deployed Address:** `0x9a2fdf465eeda0afab7795a8caef47fbbabf9691`
+- **Deployment Tx:** [0x89ff7fbbf3ad539a95e03d3b9e26296a7f52abcec21f9f8df4ea3827a917cb0a](https://hashscan.io/mainnet/transaction/0x89ff7fbbf3ad539a95e03d3b9e26296a7f52abcec21f9f8df4ea3827a917cb0a)
 
 ---
 
-## 📈 Bonding Curve
+## 📄 Explorer Links
 
-A bonding curve will be created using SaucerSwap or similar when full tokenomics are solidified. This token is used for rewards but there will be a governance token.
+- **Token ID:** [0.0.9471230 on HashScan](https://hashscan.io/mainnet/token/0.0.9471230)
+- **Token Transfers:** [View Transfers](https://hashscan.io/mainnet/token/0.0.9471230#transfers)
+- **Oracle Contract:** [0xc308fcc5882...](https://hashscan.io/mainnet/address/0xc308fcc5882bc91939e363c2f87a9496b195434c)
+- **Bonding Curve Contract:** [0x9a2fdf465eeda...](https://hashscan.io/mainnet/address/0x9a2fdf465eeda0afab7795a8caef47fbbabf9691)
 
 ---
 
-## 📊 Public Dashboard / Metrics (WIP)
+## 📈 Status of Requirements
 
-- [HashScan Token Page](https://hashscan.io/mainnet/token/0.0.9471230)
-- Initial holders: 1 (contract-associated and reporter)
-- Transfers: ✅ visible
-- Rewards claimed: ✅ simulated
-- Threat submissions: ✅ tested via Remix
+| Requirement                      | Status     | Notes                                                                 |
+|----------------------------------|------------|-----------------------------------------------------------------------|
+| Token Deployed                   | ✅ Complete| HFREW deployed on Hedera with verifiable token ID and address         |
+| Smart Contract Live              | ✅ Complete| Oracle and Bonding Curve contracts deployed                           |
+| Token Transfers Executed         | ✅ Complete| Confirmed via HashScan                                               |
+| Bonding Curve Activated          | ✅ Complete| Verified deployment and initialization on MainNet                     |
+| Public Dashboard or Report       |   Complete | https://hivefury-extension.lovable.app/pub_dash
+
+---
 
